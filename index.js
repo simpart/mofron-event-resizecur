@@ -21,6 +21,9 @@ module.exports = class extends mofron.class.Event {
             this.modname("Resizecur");
             
             this.confmng().add('last_cur', { type:'string' });
+            this.confmng().add('mouse_pos', { type:'object', init:{ side:null, vert:null } });
+            this.confmng().add('cursor_flag', { type:'boolean', init:true });
+	    this.confmng().add('offset', { type:'number', init:5 });
 
 	    if (undefined !== prm) {
                 this.config(prm);
@@ -62,25 +65,30 @@ module.exports = class extends mofron.class.Event {
                 'width': comutl.getsize(this.component().width()).toPixel(),
                 'height': comutl.getsize(this.component().height()).toPixel()
             }
-
+            
+	    let mouse_pos = {};
             /* check side */
             let chk_side = null;
-            if ( ((comp_pos.left-5)<c2.pageX) &&
-	         ((comp_pos.left+5)>c2.pageX)) {
+            if ( ((comp_pos.left-this.offset())<c2.pageX) &&
+	         ((comp_pos.left+this.offset())>c2.pageX)) {
                 chk_side = 'left';
-            } else if ( ((comp_pos.left-5+comp_siz.width)<c2.pageX) &&
-	                ((comp_pos.left+5+comp_siz.width)>c2.pageX) ) {
+            } else if ( ((comp_pos.left-this.offset()+comp_siz.width)<c2.pageX) &&
+	                ((comp_pos.left+this.offset()+comp_siz.width)>c2.pageX) ) {
                 chk_side = 'right';
             }
+            mouse_pos.side = chk_side;
+            
             /* check vertical */
             let chk_vert = null;
-            if ( ((comp_pos.top-5)<c2.pageY) &&
-	         ((comp_pos.top+5)>c2.pageY)) {
+            if ( ((comp_pos.top-this.offset())<c2.pageY) &&
+	         ((comp_pos.top+this.offset())>c2.pageY)) {
                 chk_vert = 'top';
-            } else if ( ((comp_pos.top-5+comp_siz.height)<c2.pageY) &&
-	                ((comp_pos.top+5+comp_siz.height)>c2.pageY) ) {
+            } else if ( ((comp_pos.top-this.offset()+comp_siz.height)<c2.pageY) &&
+	                ((comp_pos.top+this.offset()+comp_siz.height)>c2.pageY) ) {
                 chk_vert = 'bottom';
             }
+	    mouse_pos.vert = chk_vert;
+            this.confmng('mouse_pos', mouse_pos);
 
             /* set cursor */
             let set_cursor = null;
@@ -99,15 +107,66 @@ module.exports = class extends mofron.class.Event {
 	        set_cursor = 'default';
             }
             
-            document.body.style.cursor = set_cursor;
+            if (true === this.confmng('cursor_flag')) {
+                document.body.style.cursor = set_cursor;
+	    }
+
 	    if (this.confmng('last_cur') !== set_cursor) {
                 this.execListener(set_cursor);
 		this.confmng('last_cur', set_cursor);
-	    }
+            }
         } catch (e) {
             console.error(e.stack);
             throw e;
         }
+    }
+
+    disableCursor () {
+        try {
+            return this.confmng('cursor_flag', false);
+	} catch (e) {
+            console.error(e.stack);
+            throw e;
+        }
+    }
+
+    enableCursor () {
+        try {
+            return this.confmng('cursor_flag', true);
+        } catch (e) {
+            console.error(e.stack);
+            throw e;
+        }
+    }
+
+    offset (prm) {
+        try {
+            return this.confmng('offset',prm);
+	} catch (e) {
+            console.error(e.stack);
+            throw e;
+        }
+    }
+
+    mousePos (prm) {
+        try {
+            return this.confmng('mouse_pos', prm);
+	} catch (e) {
+            console.error(e.stack);
+            throw e;
+        }
+    }
+
+    suspend (prm) {
+        try {
+	    if (true === prm) {
+                this.confmng('mouse_pos', { side:null, vert:null });
+	    }
+            return super.suspend(prm);
+	} catch (e) {
+            console.error(e.stack);
+            throw e;
+	}
     }
 
 }
